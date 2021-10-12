@@ -1,0 +1,82 @@
+- name: Install sensor on Linux hosts
+  block:
+    - name: Handle unsecure registry
+      block:
+        - name: Check daemon.json exists
+          stat:
+            path: /etc/docker/daemon.json
+          register: daemon
+
+        - name: Create daemon.json file
+          block:
+          - name: Create daemon file
+            command: touch /etc/docker/daemon.json
+
+          - name: Add unsecure registry
+            shell: 'echo "{\"insecure-registries\": [\"{{ server_ip }}\"]}" > /etc/docker/daemon.json'
+          when: daemon.stat.exists != true
+
+        - name: Update daemon.json
+          block:
+            - name: Read daemon file
+              slurp:
+                src: /etc/docker/daemon.json
+              register: daemon_file
+
+            - name: Read file content to json
+              set_fact:
+                daemon_json: "{{ daemon_file.content|b64decode|from_json | default({}) }}"
+
+            - name: Add server ip to insecure-registries
+              block:
+                - name: Add server ip to existing insecure-registries
+                  set_fact:
+                    insecure_registries: "{{ daemon_json['insecure-registries'] + [ server_ip ] }}"
+                  when: server_ip not in daemon_json['insecure-registries']
+
+                - name: Do not add server ip to insecure-registries if already exists
+                  set_fact:
+                    insecure_registries: "{{ daemon_json['insecure-registries'] }}"
+                  when: server_ip in daemon_json['insecure-registries']
+              when: daemon_json['insecure-registries'] is defined
+
+            - name: Add insecure-registeries property
+              set_fact:
+                insecure_registries: "{{ [ server_ip ] }}"
+              when: daemon_json['insecure-registries'] is undefined
+            - name: Merge insecure-registries with the json
+              set_fact:
+                daemon_json: "{{ daemon_json | combine({'insecure-registries': insecure_registries}) }}"
+
+            - name: Write updated daemon.json to disk
+              copy:
+                content: "{{ daemon_json | to_nice_json }}"
+                dest: /etc/docker/daemon.json
+          when: daemon.stat.exists == true
+
+        - name: Restart docker
+          service:
+            name: docker
+            state: restarted
+
+      when: handle_docker_unsecure_registeries == True
+
+    - name: Start agent
+      block:
+        - name: Start container with ssl
+          block:
+            - name: Copy certificate to host
+              copy:
+                src: "{{ path_to_ca }}"
+                dest: "{{ ansible_env.HOME }}/ca-certificates:ro"
+                follow: yes
+
+            - name: Start container with ssl
+              command: docker run -v /lib/modules:/lib/modules -v /var/log:/var/log/cloudlens -v /:/host -v /var/run/docker.sock:/var/run/docker.sock -v {{ ansible_env.HOME }}/ca-certificates:ro:/usr/local/share/ca-certificates:ro --privileged --name {{ container_name }} -d --restart={{ restart_policy }} --net=host --log-opt max-size={{ max_size }} --log-opt max-file={{ max_file }} {{ server_ip }}/sensor --accept_eula yes --project_key {{ project_key }} --server {{ server_ip }} --ssl_verify {{ ssl_verify }} --runmode {{ runmode }}
+          when: path_to_ca is defined
+
+        - name: Start container with no ssl
+          command: docker run -v /lib/modules:/lib/modules -v /var/log:/var/log/cloudlens -v /:/host -v /var/run/docker.sock:/var/run/docker.sock --privileged --name {{ container_name }} -d --restart={{ restart_policy }} --net=host --log-opt max-size={{ max_size }} --log-opt max-file={{ max_file }} {{ server_ip }}/sensor --accept_eula yes --project_key {{ project_key }} --server {{ server_ip }} --ssl_verify {{ ssl_verify }} --runmode {{ runmode }}
+          when: path_to_ca is undefined
+  when: '"Linux" in ansible_system'
+  become: yes

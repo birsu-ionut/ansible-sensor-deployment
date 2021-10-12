@@ -1,0 +1,5 @@
+restart_policy: on-failure
+container_name: cloudlens-agent
+max_size: 50m
+max_file: 3
+runmode: standard
