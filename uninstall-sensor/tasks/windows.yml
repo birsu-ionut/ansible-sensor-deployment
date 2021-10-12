@@ -1,0 +1,9 @@
+- name: Uninstall Windows sensor
+  block:
+      - name: Uninstall sensor
+        win_command: "{{ ansible_env.HOME }}\\sensor.exe /uninstall /quiet"
+      - name: Remove sensor installer
+        win_file:
+          path: "{{ ansible_env.HOME }}\\sensor.exe"
+          state: absent
+  when: '"Win32NT" in ansible_system'

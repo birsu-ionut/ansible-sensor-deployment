@@ -1,0 +1,5 @@
+- name: Remove sensor and dependencies
+  block:
+    - include_tasks: linux.yml
+
+    - include_tasks: windows.yml

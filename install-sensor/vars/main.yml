@@ -1,0 +1,12 @@
+# general vars
+project_key: <project-key>
+server_ip: <server-ip>
+accept_eula: no
+ssl_verify: yes
+
+# linux vars
+handle_docker_unsecure_registeries: true
+path_to_ca: <path-to-ca>
+
+# windows vars
+auto_update: yes

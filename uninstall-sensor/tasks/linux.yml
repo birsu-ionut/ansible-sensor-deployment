@@ -1,0 +1,10 @@
+- name: Uninstall Linux sensor
+  block:
+    - name: Stop sensor container
+      command: docker stop {{ container_name }}
+    - name: Uninstall sensor
+      command: docker rm {{ container_name }}
+    - name: Remove image
+      command: docker image rm {{ server_ip }}/sensor
+  when: '"Linux" in ansible_system'
+  become: yes
