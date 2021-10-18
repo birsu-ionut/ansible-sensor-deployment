@@ -1,11 +1,20 @@
-- name: Start agent if Eula is accepted
+- name: Install sensor
   block:
-    - include_tasks: linux.yml
+    - name: Start agent if Eula is accepted
+      block:
+        - include_tasks: install_linux.yml
 
-    - include_tasks: windows.yml
-      
-  when: accept_eula == True
+        - include_tasks: install_windows.yml
+          
+      when: accept_eula == True
 
-- name: Eula not accepted
-  fail: msg="Eula terms should be accepted first"
-  when: accept_eula != True
+    - name: Eula not accepted
+      fail: msg="Eula terms should be accepted first"
+      when: accept_eula != True
+  when: uninstall == False
+- name: Uninstall sensor
+  block:
+    - include_tasks: uninstall_linux.yml
+
+    - include_tasks: uninstall_windows.yml
+  when: uninstall == True 
