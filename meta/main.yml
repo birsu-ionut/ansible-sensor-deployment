@@ -1,7 +1,7 @@
 galaxy_info:
   role_name: install-cloudlens-sensor
   author: Ionut Birsu
-  description: An ansible script to automatically install the cloudlens sensor on multiple hosts
+  description: An ansible script to automatically install and uninstall the cloudlens sensor on multiple hosts
   company: Keysight Technologies
 
   license: GNU
