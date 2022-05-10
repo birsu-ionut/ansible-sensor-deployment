@@ -15,6 +15,6 @@ Role Variables
 | accept_eula             | yes      | false   | true, false               | must be true for the script to run    |
 | ssl_verify              | yes      |         | "true", "false"           | "true" if sensor should use ssl          |
 | uninstall               | yes      | false   | true, false               | true if script should uninstall sensor |
-| handle_docker_unsecure_registeries | yes     | true, false           | if true, script will add the server ip in docker's unsecure register - only for linux |
+| handle_docker_unsecure_registeries | yes |     | true, false           | if true, script will add the server ip in docker's unsecure register - only for linux |
 | path_to_ca              | no       |         |                           | path to the security certificate - only linux |
 | auto_update             | yes      |         | "true", "false"           | "true" if sensor should auto update - windows only |
